@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -18,6 +20,9 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import nucleus.factory.RequiresPresenter;
@@ -31,25 +36,35 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
 
 
     private static final String SEARCH_TITLE = "search_title";
+    private static final String SEARCH_YEAR = "search_year";
+    private static final String SEARCH_TYPE = "search_type";
+    public static final int NO_YEAR_SELECTED = -1;
     private MovieListAdapter adapter;
-    private ViewFlipper viewFlipper;
-    private ImageView noInternetImage;
-    private RecyclerView recyclerView;
-    private ProgressBar progressBar;
+
+    @BindView(R.id.view_flipper)
+    ViewFlipper viewFlipper;
+    @BindView(R.id.no_internet_image)
+    ImageView noInternetImage;
+    @BindView(R.id.activity_listing_recycler_view)
+    RecyclerView recyclerView;
+    @BindView(R.id.no_results)
+    FrameLayout noResult;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_listing);
+        ButterKnife.bind(this);
         adapter = new MovieListAdapter();
         String title = getIntent().getStringExtra(SEARCH_TITLE);
-        recyclerView = (RecyclerView) findViewById(R.id.activity_listing_recycler_view);
+        int year = getIntent().getIntExtra(SEARCH_YEAR, NO_YEAR_SELECTED);
+        String type = getIntent().getStringExtra(SEARCH_TYPE);
         recyclerView.setAdapter(adapter);
-        viewFlipper = (ViewFlipper) findViewById(R.id.view_flipper);
-        noInternetImage = (ImageView) findViewById(R.id.no_internet_image);
-        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+
         getPresenter()
-                .getDataAsync(title)
+                .getDataAsync(title, year, type)
                 .subscribeOn(io())
                 .observeOn(mainThread())
                 .subscribe(this::success, this::error);
@@ -60,13 +75,24 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     }
 
     private void success(SearchResult searchResult) {
-        viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(recyclerView));
-        adapter.setItems(searchResult.getItems());
+        if ("False".equalsIgnoreCase(searchResult.getResponse())) {
+                viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noResult));
+        } else {
+
+            viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(recyclerView));
+            adapter.setItems(searchResult.getItems());
+        }
+    }
+    @OnClick(R.id.no_internet_image)
+    public void onNoInternetImageView(View view){
+        Toast.makeText(this, "I've clicked image", Toast.LENGTH_LONG).show();
     }
 
-    public static Intent createIntent(Context context, String title) {
+    public static Intent createIntent(Context context, String title, int year, String type) {
         Intent intent = new Intent(context, ListingActivity.class);
+        intent.putExtra(SEARCH_YEAR, year);
         intent.putExtra(SEARCH_TITLE, title);
+        intent.putExtra(SEARCH_TYPE, type);
         return intent;
     }
 
