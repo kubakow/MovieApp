@@ -18,8 +18,13 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import nucleus.factory.RequiresPresenter;
 import nucleus.view.NucleusAppCompatActivity;
+
+import static io.reactivex.android.schedulers.AndroidSchedulers.mainThread;
+import static io.reactivex.schedulers.Schedulers.io;
 
 @RequiresPresenter(ListingPresenter.class)
 public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> {
@@ -43,26 +48,26 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         viewFlipper = (ViewFlipper) findViewById(R.id.view_flipper);
         noInternetImage = (ImageView) findViewById(R.id.no_internet_image);
         progressBar = (ProgressBar) findViewById(R.id.progress_bar);
-        getPresenter().getDataAsync(title);
+        getPresenter()
+                .getDataAsync(title)
+                .subscribeOn(io())
+                .observeOn(mainThread())
+                .subscribe(this::success, this::error);
+    }
+
+    private void error(Throwable throwable) {
+        viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noInternetImage));
+    }
+
+    private void success(SearchResult searchResult) {
+        viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(recyclerView));
+        adapter.setItems(searchResult.getItems());
     }
 
     public static Intent createIntent(Context context, String title) {
         Intent intent = new Intent(context, ListingActivity.class);
         intent.putExtra(SEARCH_TITLE, title);
         return intent;
-    }
-
-    public void setDataFromModelOnUiThread(SearchResult searchData, boolean isProblemWithInternetConnection) {
-
-        runOnUiThread(() -> {
-                if(isProblemWithInternetConnection){
-            viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noInternetImage));
-        }else{
-                viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(recyclerView));
-                adapter.setItems(searchData.getItems());
-                }
-            });
-
     }
 
 }
