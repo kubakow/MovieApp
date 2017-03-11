@@ -3,10 +3,12 @@ package com.example.rent.movieapp.listing;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
@@ -24,7 +26,7 @@ import static io.reactivex.android.schedulers.AndroidSchedulers.mainThread;
 import static io.reactivex.schedulers.Schedulers.io;
 
 @RequiresPresenter(ListingPresenter.class)
-public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> {
+public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> implements CurrentItemListener, ShowOrHideCounter{
 
 
     private static final String SEARCH_TITLE = "search_title";
@@ -41,8 +43,9 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     RecyclerView recyclerView;
     @BindView(R.id.no_results)
     FrameLayout noResult;
-
-
+    private EndlessScrollListener endlessScrollListener;
+    @BindView(R.id.counter)
+    TextView counterText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +53,7 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         setContentView(R.layout.activity_listing);
         ButterKnife.bind(this);
 
-        if(savedInstanceState==null) {
+        if (savedInstanceState == null) {
             RetroFitProvider retroFitProvider = (RetroFitProvider) getApplication();
             getPresenter().setRetrofit(retroFitProvider.provideRetrofit());
         }
@@ -59,7 +62,12 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         String type = getIntent().getStringExtra(SEARCH_TYPE);
         adapter = new MovieListAdapter();
         recyclerView.setAdapter(adapter);
-
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        endlessScrollListener = new EndlessScrollListener(layoutManager, getPresenter());
+        recyclerView.addOnScrollListener(endlessScrollListener);
+        recyclerView.setLayoutManager(layoutManager);
+        endlessScrollListener.setCurrentItemListener(this);
+        endlessScrollListener.setShowOrHideCounter(this);
         getPresenter()
                 .getDataAsync(title, year, type)
                 .subscribeOn(io())
@@ -72,16 +80,19 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     }
 
     private void success(SearchResult searchResult) {
+
         if ("False".equalsIgnoreCase(searchResult.getResponse())) {
-                viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noResult));
+            viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noResult));
         } else {
 
             viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(recyclerView));
             adapter.setItems(searchResult.getItems());
+            endlessScrollListener.setTotalItemsNumber(Integer.parseInt(searchResult.getTotalResults()));
         }
     }
+
     @OnClick(R.id.no_internet_image)
-    public void onNoInternetImageView(View view){
+    public void onNoInternetImageView(View view) {
         Toast.makeText(this, "I've clicked image", Toast.LENGTH_LONG).show();
     }
 
@@ -93,4 +104,24 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         return intent;
     }
 
+    public void appendItems(SearchResult searchResult) {
+        adapter.addItems(searchResult.getItems());
+        endlessScrollListener.setTotalItemsNumber(Integer.parseInt(searchResult.getTotalResults()));
+    }
+
+    @Override
+    public void onNewCurrentItem(int currentItem, int totalItemsCount) {
+        counterText.setText(currentItem+ " of "+totalItemsCount);
+    }
+
+    @Override
+    public void showCounter() {
+            counterText.setVisibility(View.VISIBLE);
+            counterText.animate().translationX(0).start();
+    }
+
+    @Override
+    public void hideCounter() {
+        counterText.animate().translationX(counterText.getWidth()*2).start();
+    }
 }

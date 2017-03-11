@@ -12,16 +12,23 @@ import java.util.List;
 public class SearchResult {
     @SerializedName("Search")
     private List<MovieListingItem> items;
-    private int totalResults;
+    private String totalResults;
     @SerializedName("Response")
     private String response;
 
+    public void setItems(List<MovieListingItem> items) {
+        this.items = items;
+    }
+
+    public void setTotalResults(String totalResults) {
+        this.totalResults = totalResults;
+    }
 
     public List<MovieListingItem> getItems() {
         return items;
     }
 
-    public int getTotalResults() {
+    public String getTotalResults() {
         return totalResults;
     }
 
