@@ -1,12 +1,7 @@
-package com.example.rent.movieapp;
+package com.example.rent.movieapp.listing;
 
-import com.google.gson.Gson;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import com.example.rent.movieapp.search.SearchResult;
+import com.example.rent.movieapp.search.SearchService;
 
 import io.reactivex.Observable;
 import nucleus.presenter.Presenter;
@@ -21,13 +16,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ListingPresenter extends Presenter<ListingActivity> {
 
     private Retrofit retrofit;
-    public ListingPresenter(){
-        retrofit = new Retrofit.Builder()
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl("https://www.omdbapi.com")
-                .build();
-    }
 
     public Observable<SearchResult> getDataAsync(String title, int year, String type){
         String stringYear = year == ListingActivity.NO_YEAR_SELECTED ? null : String.valueOf(year);
@@ -37,5 +25,7 @@ public class ListingPresenter extends Presenter<ListingActivity> {
     }
 
 
-
+    public void setRetrofit(Retrofit retrofit) {
+        this.retrofit = retrofit;
+    }
 }

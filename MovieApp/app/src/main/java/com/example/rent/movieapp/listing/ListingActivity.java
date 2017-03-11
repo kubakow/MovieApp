@@ -1,30 +1,22 @@
-package com.example.rent.movieapp;
+package com.example.rent.movieapp.listing;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
-import com.annimon.stream.Stream;
-import com.annimon.stream.function.Consumer;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.example.rent.movieapp.R;
+import com.example.rent.movieapp.RetroFitProvider;
+import com.example.rent.movieapp.search.SearchResult;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import nucleus.factory.RequiresPresenter;
 import nucleus.view.NucleusAppCompatActivity;
 
@@ -57,10 +49,15 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_listing);
         ButterKnife.bind(this);
-        adapter = new MovieListAdapter();
+
+        if(savedInstanceState==null) {
+            RetroFitProvider retroFitProvider = (RetroFitProvider) getApplication();
+            getPresenter().setRetrofit(retroFitProvider.provideRetrofit());
+        }
         String title = getIntent().getStringExtra(SEARCH_TITLE);
         int year = getIntent().getIntExtra(SEARCH_YEAR, NO_YEAR_SELECTED);
         String type = getIntent().getStringExtra(SEARCH_TYPE);
+        adapter = new MovieListAdapter();
         recyclerView.setAdapter(adapter);
 
         getPresenter()
