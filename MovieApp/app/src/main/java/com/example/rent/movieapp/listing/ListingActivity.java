@@ -3,6 +3,7 @@ package com.example.rent.movieapp.listing;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.widget.ViewFlipper;
 
 import com.example.rent.movieapp.R;
 import com.example.rent.movieapp.RetroFitProvider;
+import com.example.rent.movieapp.detail.DetailActivity;
 import com.example.rent.movieapp.search.SearchResult;
 
 import butterknife.BindView;
@@ -26,7 +28,7 @@ import static io.reactivex.android.schedulers.AndroidSchedulers.mainThread;
 import static io.reactivex.schedulers.Schedulers.io;
 
 @RequiresPresenter(ListingPresenter.class)
-public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> implements CurrentItemListener, ShowOrHideCounter{
+public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> implements CurrentItemListener, ShowOrHideCounter, OnMovieItemClickListener{
 
 
     private static final String SEARCH_TITLE = "search_title";
@@ -46,6 +48,8 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     private EndlessScrollListener endlessScrollListener;
     @BindView(R.id.counter)
     TextView counterText;
+    @BindView(R.id.swipe_refresher)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +65,7 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         int year = getIntent().getIntExtra(SEARCH_YEAR, NO_YEAR_SELECTED);
         String type = getIntent().getStringExtra(SEARCH_TYPE);
         adapter = new MovieListAdapter();
+        adapter.setOnMovieItemClickListener(this);
         recyclerView.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         endlessScrollListener = new EndlessScrollListener(layoutManager, getPresenter());
@@ -68,6 +73,18 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         recyclerView.setLayoutManager(layoutManager);
         endlessScrollListener.setCurrentItemListener(this);
         endlessScrollListener.setShowOrHideCounter(this);
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                startLoading(title, year, type);
+            }
+        });
+
+        startLoading(title, year, type);
+    }
+
+    private void startLoading(String title, int year, String type) {
         getPresenter()
                 .getDataAsync(title, year, type)
                 .subscribeOn(io())
@@ -76,16 +93,17 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     }
 
     private void error(Throwable throwable) {
+        swipeRefreshLayout.setRefreshing(false);
         viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noInternetImage));
     }
 
     private void success(SearchResult searchResult) {
-
+        swipeRefreshLayout.setRefreshing(false);
         if ("False".equalsIgnoreCase(searchResult.getResponse())) {
             viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noResult));
         } else {
 
-            viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(recyclerView));
+            viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(swipeRefreshLayout));
             adapter.setItems(searchResult.getItems());
             endlessScrollListener.setTotalItemsNumber(Integer.parseInt(searchResult.getTotalResults()));
         }
@@ -123,5 +141,11 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     @Override
     public void hideCounter() {
         counterText.animate().translationX(counterText.getWidth()*2).start();
+    }
+
+    @Override
+    public void onMovieItemClick(String imdbID) {
+        Toast.makeText(this, imdbID, Toast.LENGTH_LONG).show();
+        startActivity(DetailActivity.createIntent(this, imdbID));
     }
 }
