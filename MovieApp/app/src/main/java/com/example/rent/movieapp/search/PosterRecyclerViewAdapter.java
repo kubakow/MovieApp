@@ -8,6 +8,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.example.rent.movieapp.R;
+import com.example.rent.movieapp.listing.OnMovieItemClickListener;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,9 +22,16 @@ import static com.example.rent.movieapp.R.id.single_poster;
 
 public class PosterRecyclerViewAdapter extends RecyclerView.Adapter<PosterRecyclerViewAdapter.ViewHolder> {
 
-    List<String> urls = Collections.emptyList();
+    private List<SimpleMovieItem> urls = Collections.emptyList();
+    private OnMovieItemClickListener onMovieItemClickListener;
 
-    public void setUrls(List<String> urls) {
+
+    public void setOnMovieItemClickListener(OnMovieItemClickListener onMovieItemClickListener) {
+        this.onMovieItemClickListener = onMovieItemClickListener;
+    }
+
+
+    public void setSimpleMovieItems(List<SimpleMovieItem> urls) {
         this.urls = urls;
         notifyDataSetChanged();
     }
@@ -37,8 +45,15 @@ public class PosterRecyclerViewAdapter extends RecyclerView.Adapter<PosterRecycl
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Glide.with(holder.posterImageView.getContext()).load(urls.get(position)).into(holder.posterImageView);
-
+        Glide.with(holder.posterImageView.getContext()).load(urls.get(position).getPoster()).into(holder.posterImageView);
+        holder.posterImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(onMovieItemClickListener!=null){
+                    onMovieItemClickListener.onMovieItemClick(urls.get(position).getImdbID());
+                }
+            }
+        });
     }
 
     @Override

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="224dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@android:color/holo_orange_light"
+    android:layout_margin="4dp"
+    android:foreground="?attr/selectableItemBackground">
+
+    <ImageView
+
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="224dp"
+        android:id="@+id/game_poster"/>
+
+    <TextView
+        android:layout_alignLeft="@id/game_poster"
+        android:background="#FF5500"
+        android:id="@+id/title_game"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:layout_alignParentBottom="true"/>
+
+    <ImageView
+        app:srcCompat="@drawable/ic_gamer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="6dp"
+        android:layout_alignRight="@id/game_poster"/>
+
+</RelativeLayout>

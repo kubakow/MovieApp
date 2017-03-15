@@ -27,7 +27,8 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <activity android:name=".detail.DetailActivity"></activity>
+        <activity android:name=".detail.DetailActivity" />
+        <activity android:name=".detail.gallery.GalleryActivity"></activity>
     </application>
 
 </manifest>
