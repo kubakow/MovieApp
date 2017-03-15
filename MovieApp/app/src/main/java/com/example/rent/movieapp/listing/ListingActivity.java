@@ -21,6 +21,8 @@ import com.example.rent.movieapp.search.SearchResult;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import nucleus.factory.RequiresPresenter;
 import nucleus.view.NucleusAppCompatActivity;
 
@@ -81,15 +83,16 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
             }
         });
 
+        getPresenter().subscribeOnLoadingResult()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::success, this::error);
         startLoading(title, year, type);
     }
 
     private void startLoading(String title, int year, String type) {
         getPresenter()
-                .getDataAsync(title, year, type)
-                .subscribeOn(io())
-                .observeOn(mainThread())
-                .subscribe(this::success, this::error);
+                .startLoadingItem(title, year, type);
     }
 
     private void error(Throwable throwable) {
@@ -97,15 +100,15 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
         viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noInternetImage));
     }
 
-    private void success(SearchResult searchResult) {
+    private void success(ResultAggregator resultAggregator) {
         swipeRefreshLayout.setRefreshing(false);
-        if ("False".equalsIgnoreCase(searchResult.getResponse())) {
+        if ("False".equalsIgnoreCase(resultAggregator.getResponse())) {
             viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(noResult));
         } else {
 
             viewFlipper.setDisplayedChild(viewFlipper.indexOfChild(swipeRefreshLayout));
-            adapter.setItems(searchResult.getItems());
-            endlessScrollListener.setTotalItemsNumber(Integer.parseInt(searchResult.getTotalResults()));
+            adapter.setItems(resultAggregator.getMovieItems());
+            endlessScrollListener.setTotalItemsNumber(resultAggregator.getTotalItemsResult());
         }
     }
 
