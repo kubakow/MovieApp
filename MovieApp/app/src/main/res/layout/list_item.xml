@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:id="@+id/single_list_item"
+    android:layout_margin="4dp"
+    android:background="#FFBBBBBB"
+    android:foreground="?attr/selectableItemBackground">
 
     <ImageView
+        android:transitionName="gallery"
         android:id="@+id/list_item_poster"
         android:layout_width="75dp"
         android:layout_height="125dp" />
