@@ -1,10 +1,5 @@
 package com.example.rent.movieapp.detail;
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-
-import com.example.rent.movieapp.RetroFitProvider;
-
 import io.reactivex.Observable;
 import nucleus.presenter.Presenter;
 import retrofit2.Retrofit;

@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/single_list_item"
     android:layout_margin="4dp"
@@ -36,3 +42,14 @@
     </LinearLayout>
 
 </LinearLayout>
+
+    <com.like.LikeButton
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/star_like_button"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        app:icon_size="25dp"
+        app:icon_type="heart"/>
+
+</RelativeLayout>

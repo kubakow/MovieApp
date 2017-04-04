@@ -2,16 +2,16 @@ package com.example.rent.movieapp.detail;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.rent.movieapp.MovieApplication;
 import com.example.rent.movieapp.R;
-import com.example.rent.movieapp.RetroFitProvider;
 import com.example.rent.movieapp.detail.gallery.GalleryActivity;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -20,6 +20,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import nucleus.factory.RequiresPresenter;
 import nucleus.view.NucleusAppCompatActivity;
+import retrofit2.Retrofit;
+
 @RequiresPresenter(DetailPresenter.class)
 public class DetailActivity extends NucleusAppCompatActivity<DetailPresenter> {
 
@@ -35,6 +37,8 @@ public class DetailActivity extends NucleusAppCompatActivity<DetailPresenter> {
     @BindView(R.id.director_text_view)
     TextView director;
 
+    @Inject
+    Retrofit retrofit;
     public static Intent createIntent(Context context, String imdbID){
         Intent intent = new Intent (context, DetailActivity.class);
         intent.putExtra(ID_KEY, imdbID);
@@ -47,8 +51,9 @@ public class DetailActivity extends NucleusAppCompatActivity<DetailPresenter> {
         setContentView(R.layout.activity_detail);
         String imdbID = getIntent().getStringExtra(ID_KEY);
         ButterKnife.bind(this);
-        RetroFitProvider retroFitProvider = (RetroFitProvider) getApplication();
-        getPresenter().setRetrofit(retroFitProvider.provideRetrofit());
+        MovieApplication movieApplication = (MovieApplication) getApplication();
+        movieApplication.getAppComponent().inject(this);
+        getPresenter().setRetrofit(retrofit);
 
 
         subscribe = getPresenter().loadDetail(imdbID).subscribeOn(Schedulers.io())

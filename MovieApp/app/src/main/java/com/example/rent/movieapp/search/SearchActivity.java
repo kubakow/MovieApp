@@ -17,8 +17,8 @@ import android.widget.TextView;
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
+import com.example.rent.movieapp.MovieApplication;
 import com.example.rent.movieapp.R;
-import com.example.rent.movieapp.RetroFitProvider;
 import com.example.rent.movieapp.detail.DetailActivity;
 import com.example.rent.movieapp.listing.ListingActivity;
 import com.example.rent.movieapp.listing.OnMovieItemClickListener;
@@ -27,6 +27,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
+
 import io.reactivex.Observable;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -68,6 +71,9 @@ public class SearchActivity extends AppCompatActivity implements OnMovieItemClic
     RecyclerView posterHeaderRecyclerView;
     private PosterRecyclerViewAdapter adapter;
 
+    @Inject
+    Retrofit retrofit;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -102,9 +108,9 @@ public class SearchActivity extends AppCompatActivity implements OnMovieItemClic
         layoutManager.setPostLayoutListener(new CarouselZoomPostLayoutListener());
 
 
-        RetroFitProvider retroFitProvider = (RetroFitProvider) getApplication();
+        MovieApplication movieApplication = (MovieApplication) getApplication();
+        movieApplication.getAppComponent().inject(this);
 
-        Retrofit retrofit = retroFitProvider.provideRetrofit();
         SearchService searchService = retrofit.create(SearchService.class);
         searchService.search(1, "a*", "2016", null)
                 .flatMap(searchResult -> Observable.fromIterable(searchResult.getItems()))

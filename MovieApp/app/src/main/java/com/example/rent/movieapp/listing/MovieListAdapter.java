@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.rent.movieapp.R;
+import com.like.LikeButton;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,9 +20,16 @@ import java.util.List;
  */
 
 public class MovieListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private OnLikeButtonClickListener onLikeButtonClickListener;
     private OnMovieItemClickListener onMovieItemClickListener;
     private static final int GAMES_VIEW_HOLDER = 1;
     private static final int MY_VIEW_HOLDER = 2;
+
+
+    public void setOnLikeButtonClickListener(OnLikeButtonClickListener onLikeButtonClickListener) {
+        this.onLikeButtonClickListener = onLikeButtonClickListener;
+    }
+
 
 
     public void setOnMovieItemClickListener(OnMovieItemClickListener onMovieItemClickListener) {
@@ -62,6 +70,14 @@ public class MovieListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
             myViewHolder.itemView.setOnClickListener(v -> {
                 if (onMovieItemClickListener != null) {
                     onMovieItemClickListener.onMovieItemClick(movieListingItem.getImdbID());
+                }
+            });
+            myViewHolder.likeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(onLikeButtonClickListener != null){
+                        onLikeButtonClickListener.onLikeButtonClick(movieListingItem);
+                    }
                 }
             });
         }
@@ -107,7 +123,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder{
-
+        LikeButton likeButton;
         View itemView;
         ImageView poster;
         TextView titleAndYear;
@@ -116,6 +132,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     public MyViewHolder(View itemView) {
         super(itemView);
         this.itemView = itemView;
+        likeButton = (LikeButton) itemView.findViewById(R.id.star_like_button);
         poster = (ImageView) itemView.findViewById(R.id.list_item_poster);
         titleAndYear = (TextView) itemView.findViewById(R.id.list_item_title_and_year);
         type = (TextView) itemView.findViewById(R.id.list_item_type);

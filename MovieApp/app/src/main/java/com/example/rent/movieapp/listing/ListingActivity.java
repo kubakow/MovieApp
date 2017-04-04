@@ -1,5 +1,6 @@
 package com.example.rent.movieapp.listing;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,10 +14,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
+import com.example.rent.movieapp.MovieApplication;
+import com.example.rent.movieapp.MovieDatabaseOpenHelper;
+import com.example.rent.movieapp.MovieTableContract;
 import com.example.rent.movieapp.R;
-import com.example.rent.movieapp.RetroFitProvider;
 import com.example.rent.movieapp.detail.DetailActivity;
 import com.example.rent.movieapp.search.SearchResult;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,12 +30,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import nucleus.factory.RequiresPresenter;
 import nucleus.view.NucleusAppCompatActivity;
-
-import static io.reactivex.android.schedulers.AndroidSchedulers.mainThread;
-import static io.reactivex.schedulers.Schedulers.io;
+import retrofit2.Retrofit;
 
 @RequiresPresenter(ListingPresenter.class)
-public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> implements CurrentItemListener, ShowOrHideCounter, OnMovieItemClickListener{
+public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> implements CurrentItemListener, OnLikeButtonClickListener, ShowOrHideCounter, OnMovieItemClickListener{
 
 
     private static final String SEARCH_TITLE = "search_title";
@@ -52,22 +55,28 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     TextView counterText;
     @BindView(R.id.swipe_refresher)
     SwipeRefreshLayout swipeRefreshLayout;
+    private MovieDatabaseOpenHelper movieDatabaseOpenHelper;
+
+    @Inject
+    Retrofit retrofit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_listing);
         ButterKnife.bind(this);
+        MovieApplication movieApplication = (MovieApplication) getApplication();
+        movieApplication.getAppComponent().inject(this);
+        movieDatabaseOpenHelper = new MovieDatabaseOpenHelper(this);
 
-        if (savedInstanceState == null) {
-            RetroFitProvider retroFitProvider = (RetroFitProvider) getApplication();
-            getPresenter().setRetrofit(retroFitProvider.provideRetrofit());
-        }
+        getPresenter().setRetrofit(retrofit);
+
         String title = getIntent().getStringExtra(SEARCH_TITLE);
         int year = getIntent().getIntExtra(SEARCH_YEAR, NO_YEAR_SELECTED);
         String type = getIntent().getStringExtra(SEARCH_TYPE);
         adapter = new MovieListAdapter();
         adapter.setOnMovieItemClickListener(this);
+        adapter.setOnLikeButtonClickListener(this);
         recyclerView.setAdapter(adapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         endlessScrollListener = new EndlessScrollListener(layoutManager, getPresenter());
@@ -150,5 +159,16 @@ public class ListingActivity extends NucleusAppCompatActivity<ListingPresenter> 
     public void onMovieItemClick(String imdbID) {
         Toast.makeText(this, imdbID, Toast.LENGTH_LONG).show();
         startActivity(DetailActivity.createIntent(this, imdbID));
+    }
+
+
+    @Override
+    public void onLikeButtonClick(MovieListingItem movieListingItem) {
+        ContentValues values = new ContentValues();
+        values.put(MovieTableContract.COLUMN_TITLE, movieListingItem.getTitle());
+        values.put(MovieTableContract.COLUMN_YEAR, movieListingItem.getYear());
+        values.put(MovieTableContract.COLUMN_TYPE, movieListingItem.getType());
+        values.put(MovieTableContract.COLUMN_POSTER, movieListingItem.getPoster());
+        movieDatabaseOpenHelper.getWritableDatabase().insert(MovieTableContract.TABLE_NAME, null, values);
     }
 }
